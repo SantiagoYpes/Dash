@@ -17,6 +17,12 @@ print(df.info())
 colors = {"bg": "#333333", "text": "#ffffff"}
 primary_color = "#A1343C"
 
+# Obtener valores únicos de la columna 'category'
+unique_categories = df["category"].unique()
+category_options = [
+    {"label": category, "value": category} for category in unique_categories
+]
+
 # Initialize the app
 app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -42,19 +48,33 @@ app.layout = dbc.Container(
             justify="center",
             align="center",
             children=[
-                dbc.RadioItems(
-                    id="filter_device",
-                    className="btn-group",
-                    inputClassName="btn-check",
-                    labelClassName="btn btn-light",
-                    labelCheckedClassName="active",
-                    options=[
-                        {"label": "Todos", "value": "All"},
-                        {"label": "PC", "value": "PC"},
-                        {"label": "Móviles", "value": "Mobile"},
-                        {"label": "Tabletas", "value": "Tablet"},
-                    ],
-                    value="All",
+                dbc.Col(
+                    dbc.RadioItems(
+                        id="filter_device",
+                        className="btn-group",
+                        inputClassName="btn-check",
+                        labelClassName="btn btn-light",
+                        labelCheckedClassName="active",
+                        options=[
+                            {"label": "Todos", "value": "All"},
+                            {"label": "PC", "value": "PC"},
+                            {"label": "Móviles", "value": "Mobile"},
+                            {"label": "Tabletas", "value": "Tablet"},
+                        ],
+                        value="All",
+                    ),
+                ),
+                dbc.Col(
+                    dcc.Dropdown(
+                        id="filter_category",
+                        options=[{"label": "Todos", "value": "All"}] + category_options,
+                        value="All",
+                        clearable=False,
+                        style={
+                            "backgroundColor": "white",
+                            "color": "black",
+                        },
+                    ),
                 ),
             ],
             className="radio-group",
@@ -100,6 +120,15 @@ app.layout = dbc.Container(
                             justify="center",
                             align="center",
                         ),
+                        dcc.Graph(
+                            figure={},
+                            id="cost_device",
+                            style={
+                                "border": "2px solid #ffffff",
+                                "borderRadius": "15px",
+                                "margin-bottom": "16px",
+                            },
+                        ),
                     ]
                 ),
             ]
@@ -132,6 +161,30 @@ def update_profit_country(device_type):
         color_discrete_sequence=[primary_color],
     )
     return fig
+
+
+# Add controls to build the interaction
+@callback(
+    Output(component_id="cost_device", component_property="figure"),
+    Input(component_id="filter_category", component_property="value"),
+)
+def update_profit_country(category):
+    if category == "All":
+        pie_fig = px.pie(
+            df,
+            values="cost",
+            names="device_type",
+            color_discrete_sequence=px.colors.sequential.RdBu,
+        )
+        return pie_fig
+    filtered_df = df[df["category"] == category]
+    pie_fig = px.pie(
+        filtered_df,
+        values="cost",
+        names="device_type",
+        color_discrete_sequence=px.colors.sequential.RdBu,
+    )
+    return pie_fig
 
 
 # Run the app
