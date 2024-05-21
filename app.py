@@ -5,7 +5,7 @@ import plotly.express as px
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 
-# Importación dataset y manejo de datos.
+
 df = pd.read_csv(
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vR39zCK50jRbeuJonUUGCWGa5t1psOH98nuZrZpZtVUtS8j_EFGg2WwqlTZmSlkjmGI6wK_HIIqKsR3/pub?gid=789094753&single=true&output=csv"
 )
@@ -66,11 +66,10 @@ formatted_profit_pc = abbreviate_number(total_profit_pc)
 total_profit = df['profit'].sum()
 formatted_profit = abbreviate_number(total_profit)
 
-# Initialize the app
 app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 
-# App layout
+
 app.layout = dbc.Container(
     style={
         "background": colors["bg"],
@@ -88,6 +87,8 @@ app.layout = dbc.Container(
             justify="center",
             align="center",
         ),
+        
+        
         dbc.Row(
             justify="center",
             align="center",
@@ -322,6 +323,30 @@ app.layout = dbc.Container(
                 ),
             ]
         ),
+        html.Br(),
+        dbc.Row(
+            dbc.Col(
+                html.H3("TiendaEUR Dataset"),
+                style={
+                    "textAlign": "center",
+                    "fontFamily": "Segoe UI",
+                    "color": colors["text"],
+                },
+            ),
+            justify="center",
+            align="center",
+        ),
+        dbc.Row(
+            dbc.Col(
+                dash_table.DataTable(df.to_dict('records'), page_size=10,style_table={'overflowX': 'auto'},),
+                style={
+                    "textAlign": "center",
+                    "fontFamily": "Segoe UI",
+                },
+            ),
+            justify="center",
+            align="center",
+        ),
     ],
 )
 
@@ -330,9 +355,11 @@ app.layout = dbc.Container(
     Input(component_id="select", component_property="value"),
 )
 def update_scatter(selected_countries):
-    if selected_countries is None:
-        selected_countries = []  # Si no se ha seleccionado ningún país, crear una lista vacía
-    filtered_df = df[df['country'].isin(selected_countries)]
+    if (selected_countries is None) or (len(selected_countries) == 0):
+        selected_countries = []  
+        filtered_df = df
+    else:
+        filtered_df = df[df['country'].isin(selected_countries)]
     scatter_fig = px.scatter(filtered_df, x='cost', y='profit', title='Ganancia según el costo')
     scatter_fig.update_traces(marker=dict(color=primary_color))
     return scatter_fig
